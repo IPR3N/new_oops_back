@@ -95,98 +95,97 @@ export class OopsController {
   //   });
   // }
 
-  private GITHUB_TOKEN = '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';
-  private REPO_NAME = 'IPR3N/images';
-  private USERNAME = 'IPR3N';
-  private BRANCH = 'main';
+  // private REPO_NAME = 'IPR3N/images';
+  // private USERNAME = 'IPR3N';
+  // private BRANCH = 'main';
 
-  @Post('upload')
-  @UseInterceptors(
-    FileInterceptor('image', {
-      storage: memoryStorage(),
-      fileFilter: (req, file, callback) => {
-        const allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
-        if (!allowedTypes.includes(file.mimetype)) {
-          return callback(
-            new BadRequestException('Type de fichier non supporté'),
-            false,
-          );
-        }
-        callback(null, true);
-      },
-      limits: {
-        fileSize: 5 * 1024 * 1024, // 5MB max
-      },
-    }),
-  )
-  async uploadImage(@UploadedFile() file: Express.Multer.File) {
-    if (!file) {
-      throw new BadRequestException('Aucun fichier fourni');
-    }
+  // @Post('upload')
+  // @UseInterceptors(
+  //   FileInterceptor('image', {
+  //     storage: memoryStorage(),
+  //     fileFilter: (req, file, callback) => {
+  //       const allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
+  //       if (!allowedTypes.includes(file.mimetype)) {
+  //         return callback(
+  //           new BadRequestException('Type de fichier non supporté'),
+  //           false,
+  //         );
+  //       }
+  //       callback(null, true);
+  //     },
+  //     limits: {
+  //       fileSize: 5 * 1024 * 1024, // 5MB max
+  //     },
+  //   }),
+  // )
+  // async uploadImage(@UploadedFile() file: Express.Multer.File) {
+  //   if (!file) {
+  //     throw new BadRequestException('Aucun fichier fourni');
+  //   }
 
-    const base64Image = file.buffer.toString('base64');
-    const imageName = `${Date.now()}-${Math.round(Math.random() * 1e9)}${extname(file.originalname)}`;
-    const githubFilePath = `images/${imageName}`;
+  //   const base64Image = file.buffer.toString('base64');
+  //   const imageName = `${Date.now()}-${Math.round(Math.random() * 1e9)}${extname(file.originalname)}`;
+  //   const githubFilePath = `images/${imageName}`;
 
-    const postData = JSON.stringify({
-      message: `Upload de ${imageName}`,
-      content: base64Image,
-      branch: this.BRANCH,
-    });
+  //   const postData = JSON.stringify({
+  //     message: `Upload de ${imageName}`,
+  //     content: base64Image,
+  //     branch: this.BRANCH,
+  //   });
 
-    const options = {
-      hostname: 'api.github.com',
-      path: `/repos/${this.USERNAME}/${this.REPO_NAME}/contents/${githubFilePath}`,
-      method: 'PUT',
-      headers: {
-        Authorization: `token ${this.GITHUB_TOKEN}`,
-        'User-Agent': this.USERNAME,
-        Accept: 'application/vnd.github+json', // Version mise à jour de l'API
-        'Content-Type': 'application/json',
-        'Content-Length': Buffer.byteLength(postData),
-      },
-    };
+  //   const options = {
+  //     hostname: 'api.github.com',
+  //     path: `/repos/${this.USERNAME}/${this.REPO_NAME}/contents/${githubFilePath}`,
+  //     method: 'PUT',
+  //     headers: {
+  //       Authorization: `token ${this.GITHUB_TOKEN}`,
+  //       'User-Agent': this.USERNAME,
+  //       Accept: 'application/vnd.github+json', // Version mise à jour de l'API
+  //       'Content-Type': 'application/json',
+  //       'Content-Length': Buffer.byteLength(postData),
+  //     },
+  //   };
 
-    try {
-      const response = await new Promise((resolve, reject) => {
-        const req = https.request(options, (res) => {
-          let data = '';
+  //   try {
+  //     const response = await new Promise((resolve, reject) => {
+  //       const req = https.request(options, (res) => {
+  //         let data = '';
 
-          res.on('data', (chunk) => {
-            data += chunk;
-          });
+  //         res.on('data', (chunk) => {
+  //           data += chunk;
+  //         });
 
-          res.on('end', () => {
-            const responseData = JSON.parse(data);
-            if (res.statusCode === 201 && responseData.content) {
-              // URL publique pour accéder à l'image
-              const imageUrl = `https://raw.githubusercontent.com/${this.USERNAME}/${this.REPO_NAME}/${this.BRANCH}/${githubFilePath}`;
-              resolve({ imageUrl });
-            } else {
-              reject(
-                new BadRequestException(
-                  'Erreur lors de l’upload sur GitHub: ' + data,
-                ),
-              );
-            }
-          });
-        });
+  //         res.on('end', () => {
+  //           const responseData = JSON.parse(data);
+  //           if (res.statusCode === 201 && responseData.content) {
+  //             // URL publique pour accéder à l'image
+  //             const imageUrl = `https://raw.githubusercontent.com/${this.USERNAME}/${this.REPO_NAME}/${this.BRANCH}/${githubFilePath}`;
+  //             resolve({ imageUrl });
+  //           } else {
+  //             reject(
+  //               new BadRequestException(
+  //                 'Erreur lors de l’upload sur GitHub: ' + data,
+  //               ),
+  //             );
+  //           }
+  //         });
+  //       });
 
-        req.on('error', (error) => {
-          reject(new BadRequestException(`Erreur HTTP: ${error.message}`));
-        });
+  //       req.on('error', (error) => {
+  //         reject(new BadRequestException(`Erreur HTTP: ${error.message}`));
+  //       });
 
-        req.write(postData);
-        req.end();
-      });
+  //       req.write(postData);
+  //       req.end();
+  //     });
 
-      return response;
-    } catch (error) {
-      throw error instanceof BadRequestException
-        ? error
-        : new BadRequestException('Erreur lors de l’upload de l’image');
-    }
-  }
+  //     return response;
+  //   } catch (error) {
+  //     throw error instanceof BadRequestException
+  //       ? error
+  //       : new BadRequestException('Erreur lors de l’upload de l’image');
+  //   }
+  // }
 
   @Post(':id/share')
   async shareOops(@Param('id') oopsId: number, @CurrentUser() user: User) {

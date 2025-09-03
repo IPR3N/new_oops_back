@@ -97,10 +97,10 @@ import * as https from 'https';
 export class ProfileController {
   constructor(private readonly profileService: ProfileService) {}
 
-  private GITHUB_TOKEN = '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';
-  private REPO_NAME = 'IPR3N/images';
-  private USERNAME = 'IPR3N';
-  private BRANCH = 'main';
+  // private GITHUB_TOKEN = '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';
+  // private REPO_NAME = 'IPR3N/images';
+  // private USERNAME = 'IPR3N';
+  // private BRANCH = 'main';
 
   @Post('upload/')
   @UseInterceptors(
@@ -117,67 +117,66 @@ export class ProfileController {
       // }),
     }),
   )
-  async uploadImage(@UploadedFile() file: Express.Multer.File) {
-    if (!file) {
-      throw new Error('Erreur lors du téléchargement de l’image');
-    }
+  // async uploadImage(@UploadedFile() file: Express.Multer.File) {
+  //   if (!file) {
+  //     throw new Error('Erreur lors du téléchargement de l’image');
+  //   }
 
-    // Lire l'image et la convertir en Base64
-    const imageData = fs.readFileSync(file.path);
-    const base64Image = imageData.toString('base64');
-    const imageName = file.filename;
-    const githubFilePath = `images/${imageName}`;
+  //   // Lire l'image et la convertir en Base64
+  //   const imageData = fs.readFileSync(file.path);
+  //   const base64Image = imageData.toString('base64');
+  //   const imageName = file.filename;
+  //   const githubFilePath = `images/${imageName}`;
 
-    const postData = JSON.stringify({
-      message: `Upload de ${imageName}`,
-      content: base64Image,
-      branch: this.BRANCH,
-    });
+  //   const postData = JSON.stringify({
+  //     message: `Upload de ${imageName}`,
+  //     content: base64Image,
+  //     branch: this.BRANCH,
+  //   });
 
-    const options = {
-      hostname: 'api.github.com',
-      path: `/repos/${this.USERNAME}/${this.REPO_NAME}/contents/${githubFilePath}`,
-      method: 'PUT',
-      headers: {
-        Authorization: `token ${this.GITHUB_TOKEN}`,
-        'User-Agent': 'Node.js',
-        Accept: 'application/vnd.github.v3+json',
-        'Content-Type': 'application/json',
-        'Content-Length': Buffer.byteLength(postData),
-      },
-    };
+  //   const options = {
+  //     hostname: 'api.github.com',
+  //     path: `/repos/${this.USERNAME}/${this.REPO_NAME}/contents/${githubFilePath}`,
+  //     method: 'PUT',
+  //     headers: {
+  //       Authorization: `token ${this.GITHUB_TOKEN}`,
+  //       'User-Agent': 'Node.js',
+  //       Accept: 'application/vnd.github.v3+json',
+  //       'Content-Type': 'application/json',
+  //       'Content-Length': Buffer.byteLength(postData),
+  //     },
+  //   };
 
-    return new Promise((resolve, reject) => {
-      const req = https.request(options, (res) => {
-        let data = '';
+  //   return new Promise((resolve, reject) => {
+  //     const req = https.request(options, (res) => {
+  //       let data = '';
 
-        res.on('data', (chunk) => {
-          data += chunk;
-        });
+  //       res.on('data', (chunk) => {
+  //         data += chunk;
+  //       });
 
-        res.on('end', () => {
-          try {
-            const response = JSON.parse(data);
-            if (response.content && response.content.download_url) {
-              resolve({ imageUrl: response.content.download_url });
-            } else {
-              reject('Erreur lors de l’upload sur GitHub');
-            }
-          } catch (error) {
-            reject('Erreur lors du parsing de la réponse GitHub');
-          }
-        });
-      });
+  //       res.on('end', () => {
+  //         try {
+  //           const response = JSON.parse(data);
+  //           if (response.content && response.content.download_url) {
+  //             resolve({ imageUrl: response.content.download_url });
+  //           } else {
+  //             reject('Erreur lors de l’upload sur GitHub');
+  //           }
+  //         } catch (error) {
+  //           reject('Erreur lors du parsing de la réponse GitHub');
+  //         }
+  //       });
+  //     });
 
-      req.on('error', (error) => {
-        reject(`Erreur HTTP: ${error.message}`);
-      });
+  //     req.on('error', (error) => {
+  //       reject(`Erreur HTTP: ${error.message}`);
+  //     });
 
-      req.write(postData);
-      req.end();
-    });
-  }
-
+  //     req.write(postData);
+  //     req.end();
+  //   });
+  // }
   @Post()
   create(@Body() createProfileDto: CreateProfileDto) {
     return this.profileService.create(createProfileDto);
