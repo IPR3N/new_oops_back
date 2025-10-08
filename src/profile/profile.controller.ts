@@ -83,6 +83,7 @@ import {
   UseInterceptors,
   UploadedFile,
   Put,
+  BadRequestException,
 } from '@nestjs/common';
 import { ProfileService } from './profile.service';
 import { CreateProfileDto } from './dto/create-profile.dto';
@@ -97,86 +98,47 @@ import * as https from 'https';
 export class ProfileController {
   constructor(private readonly profileService: ProfileService) {}
 
-  // private GITHUB_TOKEN = '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';
-  // private REPO_NAME = 'IPR3N/images';
-  // private USERNAME = 'IPR3N';
-  // private BRANCH = 'main';
-
-  @Post('upload/')
+  @Post('upload')
   @UseInterceptors(
     FileInterceptor('image', {
-      storage: memoryStorage(),
-      // storage: diskStorage({
-      //   destination: './uploads/profile',
-      //   filename: (req, file, callback) => {
-      //     const uniqueSuffix =
-      //       Date.now() + '-' + Math.round(Math.random() * 1e9);
-      //     const ext = extname(file.originalname);
-      //     callback(null, `${uniqueSuffix}${ext}`);
-      //   },
-      // }),
+      storage: diskStorage({
+        destination: './uploads/profile',
+        filename: (req, file, callback) => {
+          const uniqueSuffix =
+            Date.now() + '-' + Math.round(Math.random() * 1e9);
+          const ext = extname(file.originalname);
+          callback(null, `${uniqueSuffix}${ext}`);
+        },
+      }),
+      fileFilter: (req, file, callback) => {
+        // Vérifier le type de fichier
+        if (!file.mimetype.match(/\/(jpg|jpeg|png|gif|webp)$/)) {
+          return callback(
+            new BadRequestException('Seules les images sont autorisées'),
+            false,
+          );
+        }
+        callback(null, true);
+      },
+      limits: {
+        fileSize: 5 * 1024 * 1024, // 5MB max
+      },
     }),
   )
-  // async uploadImage(@UploadedFile() file: Express.Multer.File) {
-  //   if (!file) {
-  //     throw new Error('Erreur lors du téléchargement de l’image');
-  //   }
+  uploadImage(@UploadedFile() file: Express.Multer.File) {
+    if (!file) {
+      throw new BadRequestException('Aucun fichier fourni');
+    }
 
-  //   // Lire l'image et la convertir en Base64
-  //   const imageData = fs.readFileSync(file.path);
-  //   const base64Image = imageData.toString('base64');
-  //   const imageName = file.filename;
-  //   const githubFilePath = `images/${imageName}`;
+    console.log('Fichier uploadé:', file.filename);
 
-  //   const postData = JSON.stringify({
-  //     message: `Upload de ${imageName}`,
-  //     content: base64Image,
-  //     branch: this.BRANCH,
-  //   });
+    return {
+      success: true,
+      imageUrl: `https://oopsfarmback-b3823d9a75eb.herokuapp.com/uploads/profile/${file.filename}`,
+      filename: file.filename,
+    };
+  }
 
-  //   const options = {
-  //     hostname: 'api.github.com',
-  //     path: `/repos/${this.USERNAME}/${this.REPO_NAME}/contents/${githubFilePath}`,
-  //     method: 'PUT',
-  //     headers: {
-  //       Authorization: `token ${this.GITHUB_TOKEN}`,
-  //       'User-Agent': 'Node.js',
-  //       Accept: 'application/vnd.github.v3+json',
-  //       'Content-Type': 'application/json',
-  //       'Content-Length': Buffer.byteLength(postData),
-  //     },
-  //   };
-
-  //   return new Promise((resolve, reject) => {
-  //     const req = https.request(options, (res) => {
-  //       let data = '';
-
-  //       res.on('data', (chunk) => {
-  //         data += chunk;
-  //       });
-
-  //       res.on('end', () => {
-  //         try {
-  //           const response = JSON.parse(data);
-  //           if (response.content && response.content.download_url) {
-  //             resolve({ imageUrl: response.content.download_url });
-  //           } else {
-  //             reject('Erreur lors de l’upload sur GitHub');
-  //           }
-  //         } catch (error) {
-  //           reject('Erreur lors du parsing de la réponse GitHub');
-  //         }
-  //       });
-  //     });
-
-  //     req.on('error', (error) => {
-  //       reject(`Erreur HTTP: ${error.message}`);
-  //     });
-
-  //     req.write(postData);
-  //     req.end();
-  //   });
-  // }
   @Post()
   create(@Body() createProfileDto: CreateProfileDto) {
     return this.profileService.create(createProfileDto);
