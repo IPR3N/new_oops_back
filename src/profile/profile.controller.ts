@@ -72,6 +72,7 @@
 //     return this.profileService.remove(+id);
 //   }
 // }
+
 import {
   Controller,
   Get,
@@ -111,13 +112,39 @@ export class ProfileController {
         },
       }),
       fileFilter: (req, file, callback) => {
-        // Vérifier le type de fichier
-        if (!file.mimetype.match(/\/(jpg|jpeg|png|gif|webp)$/)) {
+        console.log('Received mimetype:', file.mimetype);
+        console.log('Original filename:', file.originalname);
+
+        // Vérifier le mimetype OU l'extension du fichier
+        const allowedMimes = [
+          'image/jpeg',
+          'image/jpg',
+          'image/png',
+          'image/gif',
+          'image/webp',
+          'application/octet-stream',
+        ];
+        const allowedExts = ['.jpg', '.jpeg', '.png', '.gif', '.webp'];
+
+        const ext = extname(file.originalname).toLowerCase();
+        const isValidMime = allowedMimes.includes(file.mimetype);
+        const isValidExt = allowedExts.includes(ext);
+
+        // Accepter si le mimetype est valide ET l'extension est une image
+        if (file.mimetype === 'application/octet-stream' && isValidExt) {
+          console.log('Accepting octet-stream with valid image extension');
+          return callback(null, true);
+        }
+
+        if (!isValidMime || !isValidExt) {
           return callback(
-            new BadRequestException('Seules les images sont autorisées'),
+            new BadRequestException(
+              'Seules les images (JPG, PNG, GIF, WEBP) sont autorisées',
+            ),
             false,
           );
         }
+
         callback(null, true);
       },
       limits: {

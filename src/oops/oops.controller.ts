@@ -38,15 +38,53 @@ export class OopsController {
         },
       }),
       fileFilter: (req, file, callback) => {
-        // Vérifier le type de fichier
-        if (!file.mimetype.match(/\/(jpg|jpeg|png|gif|webp)$/)) {
+        console.log('Received mimetype:', file.mimetype);
+        console.log('Original filename:', file.originalname);
+
+        // Vérifier le mimetype OU l'extension du fichier
+        const allowedMimes = [
+          'image/jpeg',
+          'image/jpg',
+          'image/png',
+          'image/gif',
+          'image/webp',
+          'application/octet-stream',
+        ];
+        const allowedExts = ['.jpg', '.jpeg', '.png', '.gif', '.webp'];
+
+        const ext = extname(file.originalname).toLowerCase();
+        const isValidMime = allowedMimes.includes(file.mimetype);
+        const isValidExt = allowedExts.includes(ext);
+
+        // Accepter si le mimetype est valide ET l'extension est une image
+        if (file.mimetype === 'application/octet-stream' && isValidExt) {
+          console.log('Accepting octet-stream with valid image extension');
+          return callback(null, true);
+        }
+
+        if (!isValidMime || !isValidExt) {
           return callback(
-            new BadRequestException('Seules les images sont autorisées'),
+            new BadRequestException(
+              'Seules les images (JPG, PNG, GIF, WEBP) sont autorisées',
+            ),
             false,
           );
         }
+
         callback(null, true);
       },
+      // fileFilter: (req, file, callback) => {
+      //   console.log('Received mimetype:', file.mimetype);
+      //   console.log('Original filename:', file.originalname);
+      //   // Vérifier le type de fichier complet
+      //   if (!file.mimetype.match(/^image\/(jpg|jpeg|png|gif|webp)$/)) {
+      //     return callback(
+      //       new BadRequestException('Seules les images sont autorisées'),
+      //       false,
+      //     );
+      //   }
+      //   callback(null, true);
+      // },
       limits: {
         fileSize: 5 * 1024 * 1024, // 5MB max
       },
@@ -61,19 +99,21 @@ export class OopsController {
 
     return {
       success: true,
+      // imageUrl: `https://localhost:3000/uploads/oops/${file.filename}`,
+
       imageUrl: `https://oopsfarmback-b3823d9a75eb.herokuapp.com/uploads/oops/${file.filename}`,
       filename: file.filename,
     };
   }
 
-  @Post(':id/share')
-  async shareOops(@Param('id') oopsId: number, @CurrentUser() user: User) {
-    return this.oopsService.shareOops(oopsId, user);
-  }
-
   @Post()
   create(@Body() createOopDto: CreateOopDto) {
     return this.oopsService.create(createOopDto);
+  }
+
+  @Post(':id/share')
+  async shareOops(@Param('id') oopsId: number, @CurrentUser() user: User) {
+    return this.oopsService.shareOops(oopsId, user);
   }
 
   @Get()
