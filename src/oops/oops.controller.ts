@@ -25,6 +25,11 @@ import * as fs from 'fs';
 export class OopsController {
   constructor(private readonly oopsService: OopsService) {}
 
+  @Get('liked/:userId')
+  async getLikedPosts(@Param('userId') userId: number) {
+    return this.oopsService.findLikedPosts(+userId);
+  }
+
   @Post('upload')
   @UseInterceptors(
     FileInterceptor('image', {

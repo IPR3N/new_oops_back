@@ -113,6 +113,34 @@ export class OopsService {
     });
   }
 
+  async findLikedPosts(userId: number) {
+    // Vérifier si l'utilisateur existe (optionnel, pour cohérence)
+    const user = await this.userRepo.findOne({ where: { id: userId } });
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    return this.oopsRepo.find({
+      where: {
+        likes: {
+          user: { id: userId },
+        },
+      },
+      relations: {
+        user: {
+          proofile: true, // Inclure le profil pour cohérence avec findAll
+        },
+        comments: true,
+        likes: true,
+        sharedFrom: true,
+        sharedPosts: true,
+      },
+      order: {
+        createdAt: 'DESC', // Optionnel : trier par date de création décroissante
+      },
+    });
+  }
+
   update(id: number, updateOopDto: UpdateOopDto) {}
 
   remove(id: number) {
