@@ -78,20 +78,9 @@ export class OopsController {
 
         callback(null, true);
       },
-      // fileFilter: (req, file, callback) => {
-      //   console.log('Received mimetype:', file.mimetype);
-      //   console.log('Original filename:', file.originalname);
-      //   // Vérifier le type de fichier complet
-      //   if (!file.mimetype.match(/^image\/(jpg|jpeg|png|gif|webp)$/)) {
-      //     return callback(
-      //       new BadRequestException('Seules les images sont autorisées'),
-      //       false,
-      //     );
-      //   }
-      //   callback(null, true);
-      // },
+
       limits: {
-        fileSize: 5 * 1024 * 1024, // 5MB max
+        fileSize: 30 * 1024 * 1024, // 5MB max
       },
     }),
   )

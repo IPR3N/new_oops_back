@@ -140,7 +140,35 @@ export class FrienshipService {
     return { message: 'Demande refusée' };
   }
 
+  // async getFriends(userId: number) {
+  //   const friendships = await this.friendshipRepo.find({
+  //     where: [
+  //       { requester: { id: userId }, status: 'accepted' },
+  //       { receiver: { id: userId }, status: 'accepted' },
+  //     ],
+  //     relations: {
+  //       requester: {
+  //         receivedRequests: true,
+  //         sentRequests: true,
+  //         proofile: true,
+  //       },
+  //     },
+  //   });
+
+  //   return friendships.map((friendship) =>
+  //     friendship.requester.id === userId
+  //       ? friendship.receiver
+  //       : friendship.requester,
+  //   );
+  // }
+
   async getFriends(userId: number) {
+    // Validate user exists
+    const user = await this.userRepo.findOne({ where: { id: userId } });
+    if (!user) {
+      throw new NotFoundException(`User with ID ${userId} not found`);
+    }
+
     const friendships = await this.friendshipRepo.find({
       where: [
         { requester: { id: userId }, status: 'accepted' },
@@ -150,16 +178,26 @@ export class FrienshipService {
         requester: {
           receivedRequests: true,
           sentRequests: true,
+          proofile: true, // Fixed typo
+        },
+        receiver: {
+          receivedRequests: true,
+          sentRequests: true,
           proofile: true,
         },
       },
     });
 
-    return friendships.map((friendship) =>
-      friendship.requester.id === userId
-        ? friendship.receiver
-        : friendship.requester,
-    );
+    // Log raw data for debugging
+    console.log(JSON.stringify(friendships, null, 2));
+
+    return friendships
+      .filter((friendship) => friendship.requester && friendship.receiver) // Skip invalid records
+      .map((friendship) =>
+        friendship.requester.id === userId
+          ? friendship.receiver
+          : friendship.requester,
+      );
   }
 
   async suggestFriends(userId: number) {
